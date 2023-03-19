@@ -22,7 +22,7 @@ function protectRoute(req, res, next) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    jwt.verify(token, 'secret-key', (err, decoded) => {
+    jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
         if (err) {
             return res.status(401).json({ error: 'Invalid token' });
         }
@@ -54,8 +54,11 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     const user = await prisma.user.findUnique({
-        where: { username: username }
+        where: {
+            username: username,
+        }
     });
+
 
     if (!user) {
         return res.status(401).json({ error: 'Invalid username' });
