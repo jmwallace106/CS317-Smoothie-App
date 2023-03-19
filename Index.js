@@ -36,7 +36,7 @@ app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    if (await prisma.user.findUnique({ where: { username } })) {
+    if (await prisma.user.findUnique({ where: { username: username } })) {
         return res.status(401).json({ error: 'Username is already taken' });
     }
 
@@ -54,7 +54,7 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     const user = await prisma.user.findUnique({
-        where: { username },
+        where: { username: username }
     });
 
     if (!user) {
