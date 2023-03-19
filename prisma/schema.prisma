@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// TO-DO: Need to decide which fields are required and which are optional
+// TO-DO: After deciding which fields are required and which are optional, change the validation when loading from the external API
+// TO-DO: Remember to run prisma generate after making changes to this file
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Ingredient {
+  id              String             @id @default(auto()) @map("_id") @db.ObjectId
+  name            String             @unique
+  category        String
+  userIngredients UserIngredient[]
+  recipes         RecipeIngredient[]
+}
+
+model Recipe {
+  id              String             @id @default(auto()) @map("_id") @db.ObjectId
+  name            String             @unique
+  images          Json
+  ingredientLines String[]
+  dietLabels      String[]
+  healthLabels    String[]
+  calories        Float
+  cautions        String[]
+  link            String
+  ingredients     RecipeIngredient[]
+  usersSaved      UserRecipe[]
+}
+
+model RecipeIngredient {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  text         String
+  quantity     Float
+  recipe       Recipe     @relation(fields: [recipeId], references: [id])
+  recipeId     String     @db.ObjectId
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  ingredientId String     @db.ObjectId
+}
+
+model User {
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
+  username         String           @unique
+  password         String
+  savedIngredients UserIngredient[]
+  savedRecipes     UserRecipe[]
+}
+
+model UserIngredient {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  user         User       @relation(fields: [userId], references: [id])
+  userId       String     @db.ObjectId
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  ingredientId String     @db.ObjectId
+}
+
+model UserRecipe {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  user     User   @relation(fields: [userId], references: [id])
+  userId   String @db.ObjectId
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  recipeId String @db.ObjectId
+}
