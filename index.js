@@ -7,6 +7,7 @@ const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const env = require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -35,7 +36,7 @@ app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    if (await prisma.user.findUnique({ where: { username } })) {
+    if (await prisma.user.findUnique({ where: { username: username } })) {
         return res.status(401).json({ error: 'Username is already taken' });
     }
 
@@ -53,7 +54,7 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     const user = await prisma.user.findUnique({
-        where: { username },
+        where: { username: username }
     });
 
     if (!user) {
@@ -65,7 +66,7 @@ app.post('/login', async (req, res) => {
         return res.status(401).json({ error: 'Invalid password' });
     }
 
-    const token = jwt.sign({ id: user.id }, 'your-secret-key'); // https://jwt.io
+    const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY); // https://jwt.io
     res.json({ token });
 });
 
