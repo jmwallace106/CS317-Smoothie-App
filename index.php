@@ -20,7 +20,7 @@
         </div>
 
         <b id = "loginSection">
-            <br><button onclick="window.location.href = 'loginmakelater.php'">Login</button>
+            <br><button onclick="window.location.href = 'logintomake.php'">Login</button>
         </div>
 
         <div id = "registerSection">
