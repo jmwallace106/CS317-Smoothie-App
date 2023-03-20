@@ -15,7 +15,7 @@
 
     <h2>Enter Username and Password</h2>
 
-    <form id = "registerForm" action = "makeItLater.php" method = "post">
+    <form id = "registerForm" action = "makeLater.php" method = "post">
         <p><input type = "text" name = "username" content="Username" value = "Username"></p>
         <p><input type = "password" name = "password" content="Password" value = "Password"></p>
         <button type = "submit">Register</button>
