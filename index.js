@@ -7,7 +7,6 @@ const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const env = require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -15,7 +14,7 @@ app.use(express.json());
 
 const prisma = new PrismaClient();
 
-// protects routes from unauthorized access by checking for a valid token in the request header and decoding it to get the user id
+// protects routes from unauthorized access by verifying the token with the secret key and adding the user id to the request
 function protectRoute(req, res, next) {
     const token = req.headers.authorization;
     if (!token) {
@@ -70,7 +69,7 @@ app.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY); // https://jwt.io
-    res.json({ token });
+    res.json({ token: token });
 });
 
 // Get the current user
