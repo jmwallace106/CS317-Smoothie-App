@@ -13,15 +13,10 @@
                 if (searchTerm === "" || searchTerm === null || searchTerm === " ") {
                     window.alert("Please enter something to search for.")}
 
-
-
                 document.getElementById("recipesDiv").innerHTML = "";
                 let title = document.createElement("h1");
                 title.innerText = "Recipes";
                 document.getElementById("recipesDiv").appendChild(title);
-
-                console.log(searchTerm)
-
 
                 displayRecipes(searchTerm);
             });
@@ -44,6 +39,8 @@
         }
 
         function displayRecipe(recipe, imageLink) {
+            console.log(recipe)
+
             const recipeDiv = document.createElement("div");
             recipeDiv.id = recipe.id;
 

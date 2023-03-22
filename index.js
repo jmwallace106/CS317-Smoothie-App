@@ -119,6 +119,19 @@ app.get('/users/:id/recipes', protectRoute, async (req, res) => {
     return res.json(savedRecipes);
 });
 
+// Get all recipes with a specific keyword in the name
+app.get('/recipes/:keyword', async (req, res) => {
+    const recipes = await prisma.recipe.findMany({
+        where: {
+            name: {
+                contains: req.params.keyword,
+                mode: "insensitive"
+            }
+        }
+    });
+    res.json(recipes);
+});
+
 // Get recipe by id
 app.get('/recipe/:id', async (req, res) => {
     const recipe = await prisma.recipe.findUnique({
@@ -147,19 +160,6 @@ app.get('/recipe', async (req, res) => {
     } while (true);
 });
 
-// Get all recipes with a specific keyword in the name
-app.get('/recipes/:keyword', async (req, res) => {
-    const recipes = await prisma.recipe.findMany({
-        where: {
-            name: {
-                contains: req.params.keyword,
-                mode: "insensitive"
-            }
-        }
-    });
-    res.json(recipes);
-});
-
 // Get recipe by id then get the image from the recipe by size
 app.get('/recipe/:id/image/:size', async (req, res) => {
     await prisma.recipe.findUnique({
@@ -181,7 +181,7 @@ app.get('/recipe/:id/image/:size', async (req, res) => {
 });
 
 // Get the largest possible image for recipe by id
-app.get('/recipe/:id/image/largest/', async (req, res) => {
+app.get('/recipe/:id/image/largest', async (req, res) => {
     await prisma.recipe.findUnique({
         where: { id: req.params.id },
         select: { images: true }
@@ -193,7 +193,7 @@ app.get('/recipe/:id/image/largest/', async (req, res) => {
 });
 
 // Get the smallest possible image for recipe by id
-app.get('/recipe/:id/image/smallest/', async (req, res) => {
+app.get('/recipe/:id/image/smallest', async (req, res) => {
     await prisma.recipe.findUnique({
         where: { id: req.params.id },
         select: { images: true }

@@ -13,9 +13,9 @@
                 event.preventDefault();
 
                 await fetch(`https://smoothie-backend-q7a4y.ondigitalocean.app/recipe`).then(async (response) => {
-                    let recipe = await response.json()
+                    let recipe = await response.json();
 
-                    await fetch(`https://smoothie-backend-q7a4y.ondigitalocean.app/recipe/${recipe.id}/image/REGULAR`).then(async (response) => {
+                    await fetch(`https://smoothie-backend-q7a4y.ondigitalocean.app/recipe/${recipe[0].id}/image/REGULAR`).then(async (response) => {
                         setImage(await response.json());
                     });
                 });
