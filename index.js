@@ -119,12 +119,41 @@ app.get('/users/:id/recipes', protectRoute, async (req, res) => {
     return res.json(savedRecipes);
 });
 
+// Get recipe by id
+app.get('/recipe/:id', async (req, res) => {
+    const recipe = await prisma.recipe.findUnique({
+        where: { id: req.params.id },
+    });
+    res.json(recipe);
+});
+
+// Get a random recipe
+app.get('/recipe', async (req, res) => {
+    do {
+        const count = await prisma.recipe.count();
+        console.log(count)
+        let random = Math.floor(Math.random() * count);
+        console.log(random)
+
+        const recipe = await prisma.recipe.findMany({
+            skip: random,
+            take: 1,
+        });
+
+        if (recipe.length > 0) {
+            return res.json(recipe);
+        }
+
+    } while (true);
+});
+
 // Get all recipes with a specific keyword in the name
 app.get('/recipes/:keyword', async (req, res) => {
     const recipes = await prisma.recipe.findMany({
         where: {
             name: {
-                contains: req.params.keyword
+                contains: req.params.keyword,
+                mode: "insensitive"
             }
         }
     });

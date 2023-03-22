@@ -85,14 +85,25 @@ async function processData(hits) {
 
             let nutrients = []
             for (let nutrient in recipe.totalNutrients) {
-                nutrients.push(recipe.totalNutrients[nutrient])
+                nutrient = recipe.totalNutrients[nutrient]
+                let roundedNutrient = {
+                    label: nutrient.label,
+                    quantity: parseFloat(nutrient.quantity.toFixed(3)),
+                    unit: nutrient.unit,
+                }
+                nutrients.push(roundedNutrient)
             }
 
             let dailyNutrients = []
             for (let nutrient in recipe.totalDaily) {
-                dailyNutrients.push(recipe.totalDaily[nutrient])
+                nutrient = recipe.totalDaily[nutrient]
+                let roundedNutrient = {
+                    label: nutrient.label,
+                    quantity: parseFloat(nutrient.quantity.toFixed(3)),
+                    unit: nutrient.unit,
+                }
+                dailyNutrients.push(roundedNutrient)
             }
-
 
             recipes.push({
                 id: recipeId,
@@ -102,12 +113,15 @@ async function processData(hits) {
                 servings: recipe.yield,
                 dietLabels: recipe.dietLabels,
                 healthLabels: recipe.healthLabels,
-                calories: recipe.calories,
+                calories: Math.round(recipe.calories) ,
                 nutrients: nutrients,
                 dailyNutrients: dailyNutrients,
                 cautions: recipe.cautions,
                 link: recipe.url,
             });
+
+            console.log(recipes[0])
+            process.exit(1)
 
             for (let {food, foodCategory, quantity, text, measure} of recipe.ingredients) {
                 let ingredientId = new ObjectId().toString();
@@ -162,7 +176,6 @@ function checkRecipeIsValid(recipe) {
 
             valid = false;
     }
-
 
     return valid;
 }

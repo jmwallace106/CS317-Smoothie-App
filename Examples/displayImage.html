@@ -4,15 +4,27 @@
     <meta charset="UTF-8">
     <title>Test</title>
     <script>
-        async function setImage() {
-            await fetch("http://localhost:3000/recipe/641b260bbeace4d4d216ed3a/image/REGULAR").then(async (response) => {
-                document.getElementById("test").src = await response.json();
-            });
+        function setImage(imageLink) {
+            document.getElementById("test").src = imageLink;
         }
-        setImage()
+
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("randomRecipe").addEventListener("click", async function (event) {
+                event.preventDefault();
+
+                await fetch(`https://smoothie-backend-q7a4y.ondigitalocean.app/recipe`).then(async (response) => {
+                    let recipe = await response.json()
+
+                    await fetch(`https://smoothie-backend-q7a4y.ondigitalocean.app/recipe/${recipe.id}/image/REGULAR`).then(async (response) => {
+                        setImage(await response.json());
+                    });
+                });
+            });
+        });
     </script>
 </head>
 <body>
 <img id="test" alt="image of the smoothie" src="">
+<button id="randomRecipe">show random recipe picture</button>
 </body>
 </html>

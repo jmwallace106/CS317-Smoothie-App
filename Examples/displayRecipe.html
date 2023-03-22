@@ -4,21 +4,150 @@
     <meta charset="UTF-8">
     <title>Display Recipe</title>
     <script>
-        async function displayRecipes() {
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("searchForm").addEventListener("submit", function(event) {
+                event.preventDefault();
 
-            await fetch(`https://smoothie-backend-q7a4y.ondigitalocean.app/recipes/${keyword}`).then(async (response) => {
-                const recipe = await response.json();
-                document.getElementById("name").innerHTML = recipe.name;
-                document.getElementById("description").innerHTML = recipe.description;
-                document.getElementById("ingredients").innerHTML = recipe.ingredients;
-                document.getElementById("instructions").innerHTML = recipe.instructions;
-                document.getElementById("image").src = recipe.image;
+                const searchTerm = document.getElementById("search").value.trim();
+
+                if (searchTerm === "" || searchTerm === null || searchTerm === " ") {
+                    window.alert("Please enter something to search for.")}
+
+
+
+                document.getElementById("recipesDiv").innerHTML = "";
+                let title = document.createElement("h1");
+                title.innerText = "Recipes";
+                document.getElementById("recipesDiv").appendChild(title);
+
+                console.log(searchTerm)
+
+
+                displayRecipes(searchTerm);
+            });
+        });
+
+        async function displayRecipes(searchTerm) {
+            await fetch(`https://smoothie-backend-q7a4y.ondigitalocean.app/recipes/${searchTerm}`).then(async (response) => {
+                const recipes = await response.json();
+                console.log(recipes)
+                for (const recipe of recipes) {
+                    await fetch(`https://smoothie-backend-q7a4y.ondigitalocean.app/recipe/${recipe.id}`).then(async (response) => {
+                        const recipe = await response.json();
+                        const imageLink = await fetch(`https://smoothie-backend-q7a4y.ondigitalocean.app/recipe/${recipe.id}/image/REGULAR`).then(async (response) => {
+                            return response.json();
+                        });
+                        displayRecipe(recipe, imageLink);
+                    });
+                }
             });
         }
-        displayRecipes()
+
+        function displayRecipe(recipe, imageLink) {
+            const recipeDiv = document.createElement("div");
+            recipeDiv.id = recipe.id;
+
+            const recipeName = document.createElement("h2");
+            recipeName.innerText = recipe.name;
+            recipeDiv.appendChild(recipeName);
+
+            const recipeImage = document.createElement("img");
+            recipeImage.src = imageLink;
+            recipeDiv.appendChild(recipeImage);
+
+            const recipeIngredients = document.createElement("ul");
+            for (const ingredient of recipe.ingredientLines) {
+                const ingredientItem = document.createElement("li");
+                ingredientItem.innerText = ingredient;
+                recipeIngredients.appendChild(ingredientItem);
+            }
+            recipeDiv.appendChild(recipeIngredients);
+
+            const servings = document.createElement("p");
+            servings.innerText = `Servings: ${recipe.servings}`;
+            recipeDiv.appendChild(servings);
+
+            const calories = document.createElement("p");
+            calories.innerText = `Calories: ${recipe.calories}`;
+            recipeDiv.appendChild(calories);
+
+            const dietLabels = document.createElement("p");
+            dietLabels.innerText = "Diet Labels: ";
+            let noOfLabels = recipe.dietLabels.length;
+            for (let i = 0; i < noOfLabels; i++) {
+                dietLabels.innerText += recipe.dietLabels[i];
+                if (i < noOfLabels - 1) {
+                    dietLabels.innerText += ", ";
+                }
+            }
+            recipeDiv.appendChild(dietLabels);
+
+            const healthLabels = document.createElement("p");
+            healthLabels.innerText = "Health Labels: ";
+            noOfLabels = recipe.healthLabels.length;
+            for (let i = 0; i < noOfLabels; i++) {
+                healthLabels.innerText += recipe.healthLabels[i];
+                if (i < noOfLabels - 1) {
+                    healthLabels.innerText += ", ";
+                }
+            }
+            recipeDiv.appendChild(healthLabels);
+
+            const nutrients = document.createElement("p");
+            nutrients.innerText = "Nutrients: ";
+            noOfLabels = recipe.nutrients.length;
+            for (let i = 0; i < noOfLabels; i++) {
+                let nutrient = recipe.nutrients[i];
+                nutrients.innerText += nutrient.label + ": " + nutrient.quantity + nutrient.unit;
+                if (i < noOfLabels - 1) {
+                    nutrients.innerText += ", ";
+                }
+            }
+            recipeDiv.appendChild(nutrients);
+
+            const dailyNutrients = document.createElement("p");
+            dailyNutrients.innerText = "Daily: ";
+            noOfLabels = recipe.dailyNutrients.length;
+            for (let i = 0; i < noOfLabels; i++) {
+                let nutrient = recipe.dailyNutrients[i];
+                dailyNutrients.innerText += nutrient.label + ": " + nutrient.quantity + nutrient.unit;
+                if (i < noOfLabels - 1) {
+                    dailyNutrients.innerText += ", ";
+                }
+            }
+            recipeDiv.appendChild(dailyNutrients);
+
+            if (recipe.cautions !== undefined) {
+                const cautions = document.createElement("p");
+                cautions.innerText = "CAUTIONS: ";
+                noOfLabels = recipe.cautions.length;
+                for (let i = 0; i < noOfLabels; i++) {
+                    cautions.innerText += recipe.cautions[i];
+                    if (i < noOfLabels - 1) {
+                        cautions.innerText += ", ";
+                    }
+                }
+                recipeDiv.appendChild(cautions);
+            }
+
+            const recipeLink = document.createElement("a");
+            recipeLink.href = recipe.link;
+            recipeLink.innerText = "Link to recipe";
+            recipeDiv.appendChild(recipeLink);
+
+            document.getElementById("recipesDiv").appendChild(recipeDiv);
+        }
     </script>
 </head>
 <body>
-
+    <form id="searchForm">
+        <label>
+            Search: <input type="search" id="search" name="search" placeholder="Search for a recipe">
+        </label>
+        <button type="submit" id="searchButton">Search</button>
+    </form>
+    <div id="recipesDiv">
+        <h1>Recipes</h1>
+    </div>
 </body>
 </html>
