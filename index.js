@@ -120,7 +120,10 @@ app.get('/users/:id/recipes', protectRoute, async (req, res) => {
 });
 
 // Gets the first 10 recipes with a name that contains the keyword with optional page parameter
-app.get('recipes/:keyword/:page?', async (req, res) => {
+app.get('/recipes/:keyword/:page?', async (req, res) => {
+    if (req.params.page === undefined || req.params.page < 0 || isNaN(req.params.page)) {
+        req.params.page = 0;
+    }
     const recipes = await prisma.recipe.findMany({
         where: {
             name: {
