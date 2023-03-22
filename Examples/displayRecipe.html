@@ -5,7 +5,7 @@
     <title>Display Recipe</title>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            document.getElementById("searchForm").addEventListener("submit", function(event) {
+            document.getElementById("searchForm").addEventListener("submit", async function(event) {
                 event.preventDefault();
 
                 const searchTerm = document.getElementById("search").value.trim();
@@ -18,7 +18,7 @@
                 title.innerText = "Recipes";
                 document.getElementById("recipesDiv").appendChild(title);
 
-                displayRecipes(searchTerm);
+                await displayRecipes(searchTerm);
             });
         });
 

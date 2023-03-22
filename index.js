@@ -119,15 +119,17 @@ app.get('/users/:id/recipes', protectRoute, async (req, res) => {
     return res.json(savedRecipes);
 });
 
-// Get all recipes with a specific keyword in the name
-app.get('/recipes/:keyword', async (req, res) => {
+// Gets the first 10 recipes with a name that contains the keyword with optional page parameter
+app.get('recipes/:keyword/:page?', async (req, res) => {
     const recipes = await prisma.recipe.findMany({
         where: {
             name: {
                 contains: req.params.keyword,
                 mode: "insensitive"
             }
-        }
+        },
+        skip: req.params.page * 10,
+        take: 10,
     });
     res.json(recipes);
 });
@@ -181,7 +183,7 @@ app.get('/recipe/:id/image/:size', async (req, res) => {
 });
 
 // Get the largest possible image for recipe by id
-app.get('/recipe/:id/image/largest', async (req, res) => {
+app.get('/recipe/:id/largest-image', async (req, res) => {
     await prisma.recipe.findUnique({
         where: { id: req.params.id },
         select: { images: true }
@@ -193,12 +195,13 @@ app.get('/recipe/:id/image/largest', async (req, res) => {
 });
 
 // Get the smallest possible image for recipe by id
-app.get('/recipe/:id/image/smallest', async (req, res) => {
+app.get('/recipe/:id/smallest-image', async (req, res) => {
     await prisma.recipe.findUnique({
         where: { id: req.params.id },
         select: { images: true }
     }).then(async recipe => {
         let size = Object.keys(recipe.images)[0]
+        console.log(size)
         res.json("https://smoothie-images.ams3.digitaloceanspaces.com/" + recipe.images[size]);
     });
 });

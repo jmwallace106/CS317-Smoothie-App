@@ -99,7 +99,7 @@ async function processData(hits) {
                 nutrient = recipe.totalDaily[nutrient]
                 let roundedNutrient = {
                     label: nutrient.label,
-                    quantity: parseFloat(nutrient.quantity.toFixed(3)),
+                    quantity: parseFloat(nutrient.quantity.toFixed(2)),
                     unit: nutrient.unit,
                 }
                 dailyNutrients.push(roundedNutrient)
