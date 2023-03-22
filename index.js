@@ -1,12 +1,12 @@
 // https://www.bezkoder.com/node-js-jwt-authentication-mysql/#Setup_Express_web_server
 // https://www.digitalocean.com/community/tutorials/nodejs-jwt-expressjs
-// Not functional yet, just to show the structure of the code
 
 const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const fs = require("fs");
 
 const app = express();
 app.use(cors());
@@ -130,6 +130,23 @@ app.get('/recipes/:keyword', async (req, res) => {
         }
     });
     res.json(recipes);
+});
+
+// Get recipe by id then get the image from the recipe by size
+app.get('/recipe/:id/:size', async (req, res) => {
+
+    const recipe = prisma.recipe.findUnique({
+        where: { id: req.params.id },
+        select: { images: true }
+    });
+
+    const filename = recipe.images.find(image => image.size === req.params.size);
+
+    fs.readFile("images/" + filename, (err, data) => {
+        if (err) throw err;
+        res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+        res.end(data);
+    });
 });
 
 app.listen(3000, () => {
