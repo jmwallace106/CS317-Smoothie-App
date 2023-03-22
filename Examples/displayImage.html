@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+    <script>
+        async function setImage() {
+            await fetch("http://localhost:3000/recipe/641b260bbeace4d4d216ed3a/image/REGULAR").then(async (response) => {
+                document.getElementById("test").src = await response.json();
+            });
+        }
+        setImage()
+    </script>
+</head>
+<body>
+<img id="test" alt="image of the smoothie" src="">
+</body>
+</html>

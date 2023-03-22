@@ -6,7 +6,6 @@ const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const fs = require("fs");
 
 const app = express();
 app.use(cors());
@@ -133,19 +132,45 @@ app.get('/recipes/:keyword', async (req, res) => {
 });
 
 // Get recipe by id then get the image from the recipe by size
-app.get('/recipe/:id/:size', async (req, res) => {
-
-    const recipe = prisma.recipe.findUnique({
+app.get('/recipe/:id/image/:size', async (req, res) => {
+    await prisma.recipe.findUnique({
         where: { id: req.params.id },
         select: { images: true }
+    }).then(async recipe => {
+        const filename = recipe.images[req.params.size];
+
+        if (filename === undefined || filename === null) {
+            return res.status(404).json({ error: "Image not found" });
+        } else {
+            res.json("https://smoothie-images.ams3.digitaloceanspaces.com/" + recipe.images[req.params.size]);
+        }
+
+    }).catch(err => {
+        console.log(err)
+        res.status(404).json({ error: err });
     });
+});
 
-    const filename = recipe.images.find(image => image.size === req.params.size);
+// Get the largest possible image for recipe by id
+app.get('/recipe/:id/image/largest/', async (req, res) => {
+    await prisma.recipe.findUnique({
+        where: { id: req.params.id },
+        select: { images: true }
 
-    fs.readFile("images/" + filename, (err, data) => {
-        if (err) throw err;
-        res.writeHead(200, { 'Content-Type': 'image/jpeg' });
-        res.end(data);
+    }).then(async recipe => {
+        let size = Object.keys(recipe.images)[Object.keys(recipe.images).length - 1]
+        res.json("https://smoothie-images.ams3.digitaloceanspaces.com/" + recipe.images[size]);
+    });
+});
+
+// Get the smallest possible image for recipe by id
+app.get('/recipe/:id/image/smallest/', async (req, res) => {
+    await prisma.recipe.findUnique({
+        where: { id: req.params.id },
+        select: { images: true }
+    }).then(async recipe => {
+        let size = Object.keys(recipe.images)[0]
+        res.json("https://smoothie-images.ams3.digitaloceanspaces.com/" + recipe.images[size]);
     });
 });
 

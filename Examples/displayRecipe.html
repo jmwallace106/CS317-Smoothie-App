@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Display Recipe</title>
+    <script>
+        async function displayRecipes() {
+
+            await fetch(`https://smoothie-backend-q7a4y.ondigitalocean.app/recipes/${keyword}`).then(async (response) => {
+                const recipe = await response.json();
+                document.getElementById("name").innerHTML = recipe.name;
+                document.getElementById("description").innerHTML = recipe.description;
+                document.getElementById("ingredients").innerHTML = recipe.ingredients;
+                document.getElementById("instructions").innerHTML = recipe.instructions;
+                document.getElementById("image").src = recipe.image;
+            });
+        }
+        displayRecipes()
+    </script>
+</head>
+<body>
+
+</body>
+</html>

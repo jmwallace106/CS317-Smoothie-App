@@ -6,7 +6,7 @@
 
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = ["debian-openssl-3.0.x", "debian-openssl-1.0.x"]
+  binaryTargets = ["native", "debian-openssl-3.0.x", "debian-openssl-1.0.x"]
 }
 
 datasource db {
@@ -27,9 +27,12 @@ model Recipe {
   name            String             @unique
   images          Json
   ingredientLines String[]
+  servings        Int
   dietLabels      String[]
   healthLabels    String[]
   calories        Float
+  nutrients       Json[]
+  dailyNutrients  Json[]
   cautions        String[]
   link            String
   ingredients     RecipeIngredient[]
@@ -40,6 +43,7 @@ model RecipeIngredient {
   id           String     @id @default(auto()) @map("_id") @db.ObjectId
   text         String
   quantity     Float
+  measure      String
   recipe       Recipe     @relation(fields: [recipeId], references: [id])
   recipeId     String     @db.ObjectId
   ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
