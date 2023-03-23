@@ -119,7 +119,27 @@ app.get('/users/:id/recipes', protectRoute, async (req, res) => {
     return res.json(savedRecipes);
 });
 
-// Gets the first 10 recipes with a name that contains the keyword with optional page parameter
+// Get the first 10 recipes matching the keyword with optional page parameter
+app.get('/recipes/:keyword/:page?', async (req, res) => {
+    if (req.params.page === undefined || req.params.page < 0 || isNaN(req.params.page)) {
+        req.params.page = 0;
+    }
+
+    const recipes = await prisma.recipe.findMany({
+        where: {
+            name: {
+                contains: req.params.keyword,
+                mode: "insensitive"
+            },
+        },
+        skip: req.params.page * 10,
+        take: 10,
+    });
+
+    res.json(recipes);
+});
+
+// Gets the first 10 recipes matching a keyword with optional page parameter
 app.post('/recipes/:keyword/:page?', async (req, res) => {
     if (req.params.page === undefined || req.params.page < 0 || isNaN(req.params.page)) {
         req.params.page = 0;
@@ -151,7 +171,6 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
         take: 10,
     });
 
-    res.headers.append('Access-Control-Allow-Origin', '*');
     res.json(recipes);
 });
 
