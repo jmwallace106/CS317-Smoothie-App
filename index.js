@@ -171,6 +171,10 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
         take: 10,
     });
 
+    res.headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
+    }
     res.json(recipes);
 });
 
