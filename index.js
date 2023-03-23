@@ -17,12 +17,12 @@ const prisma = new PrismaClient();
 function protectRoute(req, res, next) {
     const token = req.headers.authorization;
     if (!token) {
-        return res.status(401).json({ error: 'Unauthorized' });
+        return res.status(401).json({ message: 'Unauthorized' });
     }
 
     jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
         if (err) {
-            return res.status(401).json({ error: 'Invalid token' });
+            return res.status(401).json({ message: 'Invalid token' });
         }
         req.user = decoded;
         next();
@@ -35,17 +35,20 @@ app.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     if (await prisma.user.findUnique({ where: { username: username } })) {
-        return res.status(401).json({ error: 'Username is already taken' });
+        return res.status(401).json({ message: 'Username is already taken' });
     }
 
-    const user = await prisma.user.create({
+    await prisma.user.create({
         data: {
             username,
             password: hashedPassword,
         },
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json( {message: "Could not create user due to server error", error: err} );
     });
 
-    res.json(user);
+    res.status(200);
 });
 
 // User login
@@ -57,31 +60,39 @@ app.post('/login', async (req, res) => {
         }
     });
 
-
     if (!user) {
-        return res.status(401).json({ error: 'Invalid username' });
+        return res.status(401).json({ message: 'Invalid username' });
     }
 
     const valid = await bcrypt.compare(password, user.password);
+
     if (!valid) {
-        return res.status(401).json({ error: 'Invalid password' });
+        return res.status(401).json({ message: 'Invalid password' });
     }
 
     const token = jwt.sign({ id: user.id }, process.env.SECRET_KEY); // https://jwt.io
-    res.json({ token: token });
+
+    res.status(200).json({ token });
 });
 
 // Get the current user
 app.get('/me', protectRoute, async (req, res) => {
     const user = await prisma.user.findUnique({
         where: { id: req.user.id },
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json( {message: "Could not get user due to server error", error: err} );
     });
 
-    res.json(user);
+    res.status(200).json(user);
 });
 
-// Get all saved recipes for the logged-in user
-app.get('/user/recipes', protectRoute, async (req, res) => {
+// Get first 10 saved recipes for the logged-in user with optional page parameter
+app.get('/user/recipes/:page?', protectRoute, async (req, res) => {
+    if (req.params.page == null) {
+        req.params.page = 1;
+    }
+
     const savedRecipes = await prisma.recipe.findMany({
         where: {
             usersSaved: {
@@ -89,10 +100,15 @@ app.get('/user/recipes', protectRoute, async (req, res) => {
                     id: req.params.id
                 }
             }
-        }
+        },
+        skip: (req.params.page * 10) - 10,
+        take : 10,
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json( {message: "Could not get saved recipes due to server error", error: err} );
     });
 
-    res.json(savedRecipes);
+    res.status(200).json(savedRecipes);
 });
 
 // Delete a saved recipe for the logged-in user
@@ -122,9 +138,12 @@ app.delete('/user/:recipeId', protectRoute, async (req, res) => {
 app.get('/user/:id', protectRoute, async (req, res) => {
     const user = await prisma.user.findUnique({
         where: { id: req.params.id },
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json( {message: "Could not get user due to server error", error: err} );
     });
 
-    res.json(user);
+    res.status(200).json(user);
 });
 
 // Update a user
@@ -132,18 +151,24 @@ app.put('/user/:id', protectRoute, async (req, res) => {
     const user = await prisma.user.update({
         where: { id: req.params.id },
         data: req.body,
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json( {message: "Could not update user due to server error", error: err} );
     });
 
-    res.json(user);
+    res.status(200).json(user);
 });
 
 // Delete a user
 app.delete('/user/:id', protectRoute, async (req, res) => {
     const user = await prisma.user.delete({
         where: { id: req.params.id },
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json( {message: "Could not delete user due to server error", error: err} );
     });
 
-    res.json(user);
+    res.status(200).json(user);
 });
 
 
@@ -191,9 +216,12 @@ app.get('/recipes/:keyword/:page?', async (req, res) => {
         },
         skip: req.params.page * 10,
         take: 10,
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json( {message: "Could not get recipes due to server error", error: err} );
     });
 
-    res.json(recipes);
+    res.status(200).json(recipes);
 });
 
 // Gets the first 10 recipes matching a keyword with optional page parameter and filters by diet labels, health labels, and max calories
@@ -226,6 +254,9 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
         },
         skip: req.params.page * 10,
         take: 10,
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json( {message: "Could not get recipes due to server error", error: err} );
     });
 
     res.headers = {
@@ -233,20 +264,24 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
         'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
     }
 
-    res.json(recipes);
+    res.status(200).json(recipes);
 });
 
 // Get recipe by id
 app.get('/recipe/:id', async (req, res) => {
     const recipe = await prisma.recipe.findUnique({
         where: { id: req.params.id },
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json( {message: "Could not get recipe due to server error", error: err} );
     });
 
-    res.json(recipe);
+    res.status(200).json(recipe);
 });
 
 // Get a random recipe
 app.get('/recipe', async (req, res) => {
+    let limit = 1000
     do {
         const count = await prisma.recipe.count();
         let random = Math.floor(Math.random() * count);
@@ -257,10 +292,13 @@ app.get('/recipe', async (req, res) => {
         });
 
         if (recipe.length > 0) {
-            return res.json(recipe);
+            return res.status(200).json(recipe);
         }
 
-    } while (true);
+        limit -= 1;
+    } while (limit > 0);
+
+    res.status(404).json({ message: "No recipes found" });
 });
 
 // Get recipe by id then get the image from the recipe by size
@@ -272,14 +310,14 @@ app.get('/recipe/:id/image/:size', async (req, res) => {
         const filename = recipe.images[req.params.size];
 
         if (filename === undefined || filename === null) {
-            return res.status(404).json({ error: "Image not found" });
+            return res.status(404).json({ message: "Image not found" });
         } else {
-            res.json("https://smoothie-images.ams3.digitaloceanspaces.com/" + recipe.images[req.params.size]);
+            res.status(200).json("https://smoothie-images.ams3.digitaloceanspaces.com/" + recipe.images[req.params.size]);
         }
 
     }).catch(err => {
         console.log(err)
-        res.status(404).json({ error: err });
+        res.status(500).json({ message: "There was a server error when trying to get image", error: err });
     });
 });
 
@@ -291,7 +329,11 @@ app.get('/recipe/:id/largest-image', async (req, res) => {
 
     }).then(async recipe => {
         let size = Object.keys(recipe.images)[Object.keys(recipe.images).length - 1]
-        res.json("https://smoothie-images.ams3.digitaloceanspaces.com/" + recipe.images[size]);
+        res.status(200).json("https://smoothie-images.ams3.digitaloceanspaces.com/" + recipe.images[size]);
+
+    }).catch(err => {
+        console.log(err)
+        res.status(500).json({ message: "There was a server error when trying to get image", error: err });
     });
 });
 
@@ -300,10 +342,15 @@ app.get('/recipe/:id/smallest-image', async (req, res) => {
     await prisma.recipe.findUnique({
         where: { id: req.params.id },
         select: { images: true }
+
     }).then(async recipe => {
         let size = Object.keys(recipe.images)[0]
         console.log(size)
-        res.json("https://smoothie-images.ams3.digitaloceanspaces.com/" + recipe.images[size]);
+        res.status(200).json("https://smoothie-images.ams3.digitaloceanspaces.com/" + recipe.images[size]);
+
+    }).catch(err => {
+        console.log(err)
+        res.status(500).json({ message: "There was a server error when trying to get image", error: err });
     });
 });
 
