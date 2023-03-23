@@ -48,7 +48,7 @@ app.post('/register', async (req, res) => {
         res.status(500).json( {message: "Could not create user due to server error", error: err} );
     });
 
-    res.status(200);
+    res.status(200).json();
 });
 
 // User login
