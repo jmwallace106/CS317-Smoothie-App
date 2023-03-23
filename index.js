@@ -150,6 +150,8 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
         skip: req.params.page * 10,
         take: 10,
     });
+
+    res.headers.append('Access-Control-Allow-Origin', '*');
     res.json(recipes);
 });
 
