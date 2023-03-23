@@ -30,7 +30,7 @@ model Recipe {
   servings        Int
   dietLabels      String[]
   healthLabels    String[]
-  calories        Float
+  calories        Int
   nutrients       Json[]
   dailyNutrients  Json[]
   cautions        String[]

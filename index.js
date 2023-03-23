@@ -120,15 +120,31 @@ app.get('/users/:id/recipes', protectRoute, async (req, res) => {
 });
 
 // Gets the first 10 recipes with a name that contains the keyword with optional page parameter
-app.get('/recipes/:keyword/:page?', async (req, res) => {
+app.post('/recipes/:keyword/:page?', async (req, res) => {
     if (req.params.page === undefined || req.params.page < 0 || isNaN(req.params.page)) {
         req.params.page = 0;
     }
+
+    let {dietLabels, healthLabels, maxCalories} = req.body;
+
+    if (maxCalories === undefined || maxCalories < 0 || isNaN(maxCalories)) {
+        maxCalories = 50000;
+    }
+
     const recipes = await prisma.recipe.findMany({
         where: {
             name: {
                 contains: req.params.keyword,
                 mode: "insensitive"
+            },
+            dietLabels: {
+                hasEvery: dietLabels
+            },
+            healthLabels: {
+                hasEvery: healthLabels
+            },
+            calories: {
+                lte: parseInt(maxCalories)
             }
         },
         skip: req.params.page * 10,

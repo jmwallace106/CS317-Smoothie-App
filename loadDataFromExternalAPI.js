@@ -32,7 +32,7 @@ async function main() {
     remainingRecipes = data.count;
     console.log("Processed " + (processedRecipes += data.hits.length) + " recipes. Remaining: " + (remainingRecipes -= data.hits.length))
 
-    while (remainingRecipes > 9000) {
+    while (remainingRecipes > 8500) {
         response = await fetch(data._links.next.href);
         data = await response.json();
         await processData(data.hits);
@@ -120,9 +120,6 @@ async function processData(hits) {
                 link: recipe.url,
             });
 
-            console.log(recipes[0])
-            process.exit(1)
-
             for (let {food, foodCategory, quantity, text, measure} of recipe.ingredients) {
                 let ingredientId = new ObjectId().toString();
 
@@ -188,5 +185,4 @@ main().then(() => {
     console.log("Finished");
 }).catch(e => {
     console.error(e)
-    process.exit(1)
 });
