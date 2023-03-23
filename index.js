@@ -76,36 +76,12 @@ app.get('/me', protectRoute, async (req, res) => {
     const user = await prisma.user.findUnique({
         where: { id: req.user.id },
     });
+
     res.json(user);
 });
 
-// Get a user by id
-app.get('/users/:id', protectRoute, async (req, res) => {
-    const user = await prisma.user.findUnique({
-        where: { id: req.params.id },
-    });
-    res.json(user);
-});
-
-// Update a user
-app.put('/users/:id', protectRoute, async (req, res) => {
-    const user = await prisma.user.update({
-        where: { id: req.params.id },
-        data: req.body,
-    });
-    res.json(user);
-});
-
-// Delete a user
-app.delete('/users/:id', protectRoute, async (req, res) => {
-    const user = await prisma.user.delete({
-        where: { id: req.params.id },
-    });
-    res.json(user);
-});
-
-// Get all saved recipes for a user
-app.get('/users/:id/recipes', protectRoute, async (req, res) => {
+// Get all saved recipes for the logged-in user
+app.get('/user/recipes', protectRoute, async (req, res) => {
     const savedRecipes = await prisma.recipe.findMany({
         where: {
             usersSaved: {
@@ -116,7 +92,88 @@ app.get('/users/:id/recipes', protectRoute, async (req, res) => {
         }
     });
 
-    return res.json(savedRecipes);
+    res.json(savedRecipes);
+});
+
+// Delete a saved recipe for the logged-in user
+app.delete('/user/:recipeId', protectRoute, async (req, res) => {
+    const recipeId = req.params.recipeId;
+
+    await prisma.userRecipe.findFirst({
+        where: {
+            userId: req.user.id,
+            recipeId: recipeId,
+        }
+    }).then(async (userRecipe) => {
+        await prisma.userRecipe.delete({
+            where: {
+                id: userRecipe.id,
+            }
+        })
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json(err);
+    });
+
+    res.status(200).json({message: "Recipe deleted successfully"});
+});
+
+// Get a user by id
+app.get('/user/:id', protectRoute, async (req, res) => {
+    const user = await prisma.user.findUnique({
+        where: { id: req.params.id },
+    });
+
+    res.json(user);
+});
+
+// Update a user
+app.put('/user/:id', protectRoute, async (req, res) => {
+    const user = await prisma.user.update({
+        where: { id: req.params.id },
+        data: req.body,
+    });
+
+    res.json(user);
+});
+
+// Delete a user
+app.delete('/user/:id', protectRoute, async (req, res) => {
+    const user = await prisma.user.delete({
+        where: { id: req.params.id },
+    });
+
+    res.json(user);
+});
+
+
+// Save a recipe for a user
+app.post('/user/:recipeId', protectRoute, async (req, res) => {
+    const recipeId = req.params.recipeId;
+
+    console.log(req.user.id);
+    console.log(recipeId);
+
+    if (await prisma.userRecipe.findFirst({
+        where: {
+            userId: req.user.id,
+            recipeId: recipeId,
+        }
+    })) {
+        return res.status(401).json({ message: 'Recipe is already saved' });
+    }
+
+    await prisma.userRecipe.create({
+        data: {
+            userId: req.user.id,
+            recipeId: recipeId,
+        }
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json({message: "Recipe could not be saved"});
+    });
+
+    res.status(200).json({message: "Recipe saved successfully"});
 });
 
 // Get the first 10 recipes matching the keyword with optional page parameter
@@ -139,7 +196,7 @@ app.get('/recipes/:keyword/:page?', async (req, res) => {
     res.json(recipes);
 });
 
-// Gets the first 10 recipes matching a keyword with optional page parameter
+// Gets the first 10 recipes matching a keyword with optional page parameter and filters by diet labels, health labels, and max calories
 app.post('/recipes/:keyword/:page?', async (req, res) => {
     if (req.params.page === undefined || req.params.page < 0 || isNaN(req.params.page)) {
         req.params.page = 0;
@@ -175,6 +232,7 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
     }
+
     res.json(recipes);
 });
 
@@ -183,6 +241,7 @@ app.get('/recipe/:id', async (req, res) => {
     const recipe = await prisma.recipe.findUnique({
         where: { id: req.params.id },
     });
+
     res.json(recipe);
 });
 
@@ -190,9 +249,7 @@ app.get('/recipe/:id', async (req, res) => {
 app.get('/recipe', async (req, res) => {
     do {
         const count = await prisma.recipe.count();
-        console.log(count)
         let random = Math.floor(Math.random() * count);
-        console.log(random)
 
         const recipe = await prisma.recipe.findMany({
             skip: random,
