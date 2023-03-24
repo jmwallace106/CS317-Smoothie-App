@@ -357,7 +357,7 @@ app.get('/recipe/:id', async (req, res) => {
 
     recipe = await removeSomeNutrients([recipe]);
 
-    res.status(200).json(recipe);
+    res.status(200).json(recipe[0]);
 });
 
 // Get a random recipe
@@ -367,13 +367,14 @@ app.get('/recipe', async (req, res) => {
         const count = await prisma.recipe.count();
         let random = Math.floor(Math.random() * count);
 
-        const recipe = await prisma.recipe.findMany({
+        let recipe = await prisma.recipe.findMany({
             skip: random,
             take: 1,
         });
 
         if (recipe.length > 0) {
-            return res.status(200).json(recipe);
+            recipe = await removeSomeNutrients([recipe]);
+            return res.status(200).json(recipe[0]);
         }
 
         limit -= 1;
