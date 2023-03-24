@@ -1,6 +1,3 @@
-// https://www.bezkoder.com/node-js-jwt-authentication-mysql/#Setup_Express_web_server
-// https://www.digitalocean.com/community/tutorials/nodejs-jwt-expressjs
-
 const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
@@ -159,6 +156,19 @@ app.put('/user/:id', protectRoute, async (req, res) => {
     res.status(200).json(user);
 });
 
+app.get('/ingredients', async (req, res) => {
+    const ingredients = await prisma.ingredient.findMany({
+        select: {
+            name: true,
+        }
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json( {message: "Could not get ingredients due to server error", error: err} );
+    });
+
+    res.status(200).json(ingredients);
+});
+
 // Delete a user
 app.delete('/user/:id', protectRoute, async (req, res) => {
     const user = await prisma.user.delete({
@@ -232,7 +242,7 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
 
     let {dietLabels, healthLabels, maxCalories} = req.body;
 
-    if (maxCalories === undefined || maxCalories < 0 || isNaN(maxCalories)) {
+    if (maxCalories === undefined || maxCalories < 0 || isNaN(maxCalories) || maxCalories === "") {
         maxCalories = 50000;
     }
 

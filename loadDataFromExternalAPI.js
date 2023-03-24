@@ -40,6 +40,18 @@ async function main() {
         console.log("Processed " + (processedRecipes += data.hits.length) + " recipes. Remaining: " + (remainingRecipes -= data.hits.length))
     }
 
+    let uniqueIngredients = [...new Set(ingredients.map(ingredient => ingredient.name))].length
+    let totalIngredients = ingredients.length
+
+    console.log(ingredients)
+
+    if (uniqueIngredients !== totalIngredients) {
+        console.log("Duplicate ingredients found")
+        process.exit(1)
+    } else {
+        console.log("No duplicate ingredients found")
+    }
+
     await prisma.$connect()
     console.log("Connected to DB")
     console.log(recipes[0])
@@ -67,6 +79,7 @@ async function processData(hits) {
         if (checkRecipeIsValid(recipe)) {
             let recipeId = new ObjectId().toString();
 
+            // Save images to file system and store filenames in recipe
             let fileNames = {}
             let filename
             for (let image in recipe.images) {
@@ -121,11 +134,12 @@ async function processData(hits) {
             });
 
             for (let {food, foodCategory, quantity, text, measure} of recipe.ingredients) {
-                let ingredientId = new ObjectId().toString();
+                let ingredientId;
 
-                if (ingredients.find(ingredient => ingredient.name === food)) {
-                    continue;
+                if (ingredients.find(ingredient => ingredient.name.toLowerCase() === food.toLowerCase())) {
+                    ingredientId = ingredients.find(ingredient => ingredient.name.toLowerCase() === food.toLowerCase()).id;
                 } else {
+                    ingredientId = new ObjectId().toString();
                     ingredients.push({
                         id: ingredientId,
                         name: food,
