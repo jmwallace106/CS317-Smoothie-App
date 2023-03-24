@@ -90,7 +90,7 @@ app.get('/user/recipes/:page?', protectRoute, async (req, res) => {
         req.params.page = 1;
     }
 
-    const savedRecipes = await prisma.recipe.findMany({
+    let savedRecipes = await prisma.recipe.findMany({
         where: {
             usersSaved: {
                 some: {
@@ -104,6 +104,9 @@ app.get('/user/recipes/:page?', protectRoute, async (req, res) => {
         console.log(err);
         res.status(500).json( {message: "Could not get saved recipes due to server error", error: err} );
     });
+
+    // Remove some nutrition data from the response
+    savedRecipes = await removeSomeNutrients(savedRecipes);
 
     res.status(200).json(savedRecipes);
 });
@@ -217,7 +220,7 @@ app.get('/recipes/:keyword/:page?', async (req, res) => {
         req.params.page = 0;
     }
 
-    const recipes = await prisma.recipe.findMany({
+    let recipes = await prisma.recipe.findMany({
         where: {
             name: {
                 contains: req.params.keyword,
@@ -230,6 +233,8 @@ app.get('/recipes/:keyword/:page?', async (req, res) => {
         console.log(err);
         res.status(500).json( {message: "Could not get recipes due to server error", error: err} );
     });
+
+    recipes = await removeSomeNutrients(recipes);
 
     res.status(200).json(recipes);
 });
@@ -331,6 +336,8 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
         });
     }
 
+    recipes = await removeSomeNutrients(recipes);
+
     res.headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
@@ -425,6 +432,27 @@ app.get('/recipe/:id/smallest-image', async (req, res) => {
         res.status(500).json({ message: "There was a server error when trying to get image", error: err });
     });
 });
+
+async function removeSomeNutrients(recipes) {
+    for (let i = 0; i < recipes.length; i++) {
+
+        for (let nutrient of recipes[i].nutrients) {
+            let name = nutrient.label;
+            if (name !== "Energy" && name !== "Protein" && name !== "Fat" && name !== "Saturated" && name !== "Trans" && name !== "Carbs" && name !== "Sugars" && name !== "Fiber" && name !== "Sodium") {
+                recipes[i].nutrients = recipes[i].nutrients.filter((item) => item.label !== nutrient.label);
+            }
+        }
+
+        for (let nutrient of recipes[i].dailyNutrients) {
+            let name = nutrient.label;
+            if (name !== "Energy" && name !== "Protein" && name !== "Fat" && name !== "Saturated" && name !== "Trans" && name !== "Carbs" && name !== "Sugars" && name !== "Fiber" && name !== "Sodium") {
+                recipes[i].dailyNutrients = recipes[i].dailyNutrients.filter((item) => item.label !== nutrient.label);
+            }
+        }
+    }
+
+    return recipes;
+}
 
 app.listen(3000, () => {
     console.log('Server started on port 3000');
