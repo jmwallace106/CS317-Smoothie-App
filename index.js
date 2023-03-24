@@ -373,7 +373,8 @@ app.get('/recipe', async (req, res) => {
         });
 
         if (recipe.length > 0) {
-            recipe = await removeSomeNutrients([recipe]);
+            recipe = await removeSomeNutrients([recipe[0]]);
+            console.log("this is it ", recipe);
             return res.status(200).json(recipe[0]);
         }
 
