@@ -280,31 +280,58 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
 
     console.log(recipeIds);
 
-    const recipes = await prisma.recipe.findMany({
-        where: {
-            name: {
-                contains: req.params.keyword,
-                mode: "insensitive"
+    let recipes;
+
+    if (recipeIds.length === 0) {
+        recipes = await prisma.recipe.findMany({
+            where: {
+                name: {
+                    contains: req.params.keyword,
+                    mode: "insensitive"
+                },
+                dietLabels: {
+                    hasEvery: dietLabels
+                },
+                healthLabels: {
+                    hasEvery: healthLabels
+                },
+                calories: {
+                    lte: parseInt(maxCalories)
+                }
             },
-            dietLabels: {
-                hasEvery: dietLabels
+            skip: req.params.page * 10,
+            take: 10,
+        }).catch((err) => {
+            console.log(err);
+            res.status(500).json( {message: "Could not get recipes due to server error", error: err} );
+        });
+    } else {
+        recipes = await prisma.recipe.findMany({
+            where: {
+                name: {
+                    contains: req.params.keyword,
+                    mode: "insensitive"
+                },
+                dietLabels: {
+                    hasEvery: dietLabels
+                },
+                healthLabels: {
+                    hasEvery: healthLabels
+                },
+                calories: {
+                    lte: parseInt(maxCalories)
+                },
+                id: {
+                    in: recipeIds
+                }
             },
-            healthLabels: {
-                hasEvery: healthLabels
-            },
-            calories: {
-                lte: parseInt(maxCalories)
-            },
-            id: {
-                in: recipeIds
-            }
-        },
-        skip: req.params.page * 10,
-        take: 10,
-    }).catch((err) => {
-        console.log(err);
-        res.status(500).json( {message: "Could not get recipes due to server error", error: err} );
-    });
+            skip: req.params.page * 10,
+            take: 10,
+        }).catch((err) => {
+            console.log(err);
+            res.status(500).json( {message: "Could not get recipes due to server error", error: err} );
+        });
+    }
 
     res.headers = {
         'Access-Control-Allow-Origin': '*',
