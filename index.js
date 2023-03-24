@@ -348,12 +348,14 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
 
 // Get recipe by id
 app.get('/recipe/:id', async (req, res) => {
-    const recipe = await prisma.recipe.findUnique({
+    let recipe = await prisma.recipe.findUnique({
         where: { id: req.params.id },
     }).catch((err) => {
         console.log(err);
         res.status(500).json( {message: "Could not get recipe due to server error", error: err} );
     });
+
+    recipe = await removeSomeNutrients([recipe]);
 
     res.status(200).json(recipe);
 });
