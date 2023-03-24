@@ -240,11 +240,45 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
         req.params.page = 0;
     }
 
-    let {dietLabels, healthLabels, maxCalories} = req.body;
+    let {dietLabels, healthLabels, ingredients, maxCalories} = req.body;
 
     if (maxCalories === undefined || maxCalories < 0 || isNaN(maxCalories) || maxCalories === "") {
         maxCalories = 50000;
     }
+
+    const ids = await prisma.ingredient.findMany({
+        where: {
+            name: {
+                in: ingredients
+            }
+        },
+        select: {
+            id: true,
+        }
+    })
+
+    let ingredientIds = [];
+    ids.forEach((ingredient) => {
+        ingredientIds.push(ingredient.id);
+    });
+
+    const recIds = await prisma.recipeIngredient.findMany({
+        select: {
+            recipeId: true,
+        },
+        where: {
+            ingredientId: {
+                in: ingredientIds
+            }
+        }
+    });
+
+    let recipeIds = [];
+    recIds.forEach((recipe) => {
+        recipeIds.push(recipe.recipeId);
+    });
+
+    console.log(recipeIds);
 
     const recipes = await prisma.recipe.findMany({
         where: {
@@ -260,6 +294,9 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
             },
             calories: {
                 lte: parseInt(maxCalories)
+            },
+            id: {
+                in: recipeIds
             }
         },
         skip: req.params.page * 10,
