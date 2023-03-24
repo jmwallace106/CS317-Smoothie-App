@@ -246,43 +246,9 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
         maxCalories = 50000;
     }
 
-    const ids = await prisma.ingredient.findMany({
-        where: {
-            name: {
-                in: ingredients
-            }
-        },
-        select: {
-            id: true,
-        }
-    })
-
-    let ingredientIds = [];
-    ids.forEach((ingredient) => {
-        ingredientIds.push(ingredient.id);
-    });
-
-    const recIds = await prisma.recipeIngredient.findMany({
-        select: {
-            recipeId: true,
-        },
-        where: {
-            ingredientId: {
-                in: ingredientIds
-            }
-        }
-    });
-
-    let recipeIds = [];
-    recIds.forEach((recipe) => {
-        recipeIds.push(recipe.recipeId);
-    });
-
-    console.log(recipeIds);
-
     let recipes;
 
-    if (recipeIds.length === 0) {
+    if (ingredients.length === 0) {
         recipes = await prisma.recipe.findMany({
             where: {
                 name: {
@@ -306,6 +272,38 @@ app.post('/recipes/:keyword/:page?', async (req, res) => {
             res.status(500).json( {message: "Could not get recipes due to server error", error: err} );
         });
     } else {
+        const ids = await prisma.ingredient.findMany({
+            where: {
+                name: {
+                    in: ingredients
+                }
+            },
+            select: {
+                id: true,
+            }
+        })
+
+        let ingredientIds = [];
+        ids.forEach((ingredient) => {
+            ingredientIds.push(ingredient.id);
+        });
+
+        const recIds = await prisma.recipeIngredient.findMany({
+            select: {
+                recipeId: true,
+            },
+            where: {
+                ingredientId: {
+                    in: ingredientIds
+                }
+            }
+        });
+
+        let recipeIds = [];
+        recIds.forEach((recipe) => {
+            recipeIds.push(recipe.recipeId);
+        });
+
         recipes = await prisma.recipe.findMany({
             where: {
                 name: {
